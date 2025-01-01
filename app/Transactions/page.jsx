@@ -14,14 +14,7 @@ const montserrat = Montserrat({
 function page() {
   const [transactions, setTransactions] = useState([]);
 
-  console.log(
-    new Date(
-      "Sun Dec 01 2024 00:00:00 GMT+0100 (heure normale d’Europe centrale)"
-    ) >
-      new Date(
-        "Tue Dec 30 2024 00:00:00 GMT+0100 (heure normale d’Europe centrale)"
-      )
-  );
+  console.log(new Date());
 
   let TransactionFilter =
     "type=income&minPrice=200&maxPrice=100000&afterDate=2024/12/30";
@@ -233,7 +226,7 @@ function page() {
                         </h3>
                         {/* List of Transactions for the Date */}
                         {transactions
-                          .sort((a, b) => a.id - b.id) // Sort by price from biggest to smallest
+                          .sort((a, b) => new Date(a.date) - new Date(b.date)) // Sort by price from biggest to smallest
                           .map((transaction) => (
                             <div
                               key={`transaction-${transaction._id}`}
