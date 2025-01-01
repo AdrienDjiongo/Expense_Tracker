@@ -226,7 +226,10 @@ function page() {
                         </h3>
                         {/* List of Transactions for the Date */}
                         {transactions
-                          .sort((a, b) => new Date(a.date) - new Date(b.date)) // Sort by price from biggest to smallest
+                          .sort(
+                            (a, b) =>
+                              new Date(b.createdAt) - new Date(a.createdAt)
+                          ) // Sort by price from biggest to smallest
                           .map((transaction) => (
                             <div
                               key={`transaction-${transaction._id}`}
