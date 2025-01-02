@@ -24,6 +24,11 @@ function page() {
   const [afterDateFilter, setAfterDateFilter] = useState("");
   const [beforeDateFilter, setBeforeDateFilter] = useState("");
   const [finalFilter, setfinalFilter] = useState("");
+  const [selectedValue, setSelectedValue] = useState("");
+
+  const handleChange = (event) => {
+    setSelectedValue(event.target.value);
+  };
 
   // Handle date input change
   const handleAfterDateChange = (event) => {
@@ -50,17 +55,12 @@ function page() {
     "type=income&minPrice=200&maxPrice=100000&afterDate=2024/12/30";
 
   useEffect(() => {
-    if (isIncomeChecked == isOutcomeChecked) {
-      setTypeFilter(null);
-    } else if (isIncomeChecked && !isOutcomeChecked) {
-      setTypeFilter("type=income");
-    } else if (!isIncomeChecked && isOutcomeChecked) {
-      setTypeFilter("type=outcome");
-    } else if (isOutcomeChecked && !isIncomeChecked) {
-      setTypeFilter("type=outcome");
-    } else if (!isOutcomeChecked && isIncomeChecked) {
-      setTypeFilter("type=income");
+    if (selectedValue) {
+      setTypeFilter("type=" + selectedValue);
+    } else {
+      setTypeFilter("");
     }
+
     setDateFilter(afterDateFilter + "&" + beforeDateFilter);
 
     const DF = dateFilter ? dateFilter + "&" : " ";
@@ -68,13 +68,11 @@ function page() {
 
     setfinalFilter(DF + TF);
   }, [
-    isIncomeChecked,
-    isOutcomeChecked,
+    selectedValue,
     typeFilter,
     dateFilter,
     afterDateFilter,
     beforeDateFilter,
-    finalFilter,
   ]);
 
   useEffect(() => {
@@ -89,7 +87,7 @@ function page() {
       })
       .then((data) => setTransactions(data))
       .catch((error) => console.error("Error:", error));
-  }, [typeFilter, dateFilter, finalFilter]);
+  }, [finalFilter]);
 
   const monthNamess = [
     "Janvier",
@@ -229,7 +227,7 @@ function page() {
                   <input
                     type="date"
                     value={selectedAfterDate}
-                    onChange={() => handleAfterDateChange()}
+                    onChange={handleAfterDateChange}
                   />
                 </p>{" "}
                 <p>
@@ -237,7 +235,7 @@ function page() {
                   <input
                     type="date"
                     value={selectedBeforeDate}
-                    onChange={() => handleBeforeDateChange()}
+                    onChange={handleBeforeDateChange}
                   />{" "}
                 </p>
                 <p>none</p>{" "}
@@ -246,6 +244,18 @@ function page() {
             <div className="text-zinc-500">
               <p className="mx-auto underline text-[#3ec3d5]">by statuts</p>
               <div className="flex flex-col gap-1">
+                <p>Select en option</p>
+                <select
+                  id="options"
+                  value={selectedValue}
+                  onChange={handleChange}
+                  className="text-zinc-700 bg-white border-[1px] rounded-md active:border-zinc-600 border-zinc-600"
+                >
+                  <option value="">All</option>
+                  <option value="income">Incomes</option>
+                  <option value="outcome">Outcomes</option>
+                </select>
+                <p>Selected: {typeFilter}</p>
                 <p>
                   Incomes{" "}
                   <input
