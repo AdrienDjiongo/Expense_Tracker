@@ -13,16 +13,75 @@ const montserrat = Montserrat({
 
 function page() {
   const [transactions, setTransactions] = useState([]);
+  const [isIncomeChecked, setIsIncomeChecked] = useState(false);
+  const [isOutcomeChecked, setIsOutcomeChecked] = useState(false);
+  const [incomeFilter, setIncomeFilter] = useState(false);
+  const [outcomeFilter, setOutcomeFilter] = useState(false);
+  const [typeFilter, setTypeFilter] = useState("");
+  const [selectedAfterDate, setSelectedAfterDate] = useState("");
+  const [selectedBeforeDate, setSelectedBeforeDate] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [afterDateFilter, setAfterDateFilter] = useState("");
+  const [beforeDateFilter, setBeforeDateFilter] = useState("");
+  const [finalFilter, setfinalFilter] = useState("");
+
+  // Handle date input change
+  const handleAfterDateChange = (event) => {
+    setSelectedAfterDate(event.target.value); // Update the state with the selected date
+    setAfterDateFilter("afterDate=" + event.target.value);
+  };
+
+  const handleBeforeDateChange = (event) => {
+    setSelectedBeforeDate(event.target.value); // Update the state with the selected date
+    setBeforeDateFilter("beforeDate=" + event.target.value);
+  };
+
+  const ChangeIncomeCheck = (event) => {
+    setIsIncomeChecked(event.target.checked); // Update the state based on checkbox status
+  };
+  const ChangeOutcomeCheck = (event) => {
+    setIsOutcomeChecked(event.target.checked); // Update the state based on checkbox status
+  };
 
   console.log(new Date());
+  console.log(incomeFilter + " is income filter");
 
   let TransactionFilter =
     "type=income&minPrice=200&maxPrice=100000&afterDate=2024/12/30";
 
   useEffect(() => {
+    if (isIncomeChecked == isOutcomeChecked) {
+      setTypeFilter(null);
+    } else if (isIncomeChecked && !isOutcomeChecked) {
+      setTypeFilter("type=income");
+    } else if (!isIncomeChecked && isOutcomeChecked) {
+      setTypeFilter("type=outcome");
+    } else if (isOutcomeChecked && !isIncomeChecked) {
+      setTypeFilter("type=outcome");
+    } else if (!isOutcomeChecked && isIncomeChecked) {
+      setTypeFilter("type=income");
+    }
+    setDateFilter(afterDateFilter + "&" + beforeDateFilter);
+
+    const DF = dateFilter ? dateFilter + "&" : " ";
+    const TF = typeFilter ? typeFilter : "";
+
+    setfinalFilter(DF + TF);
+  }, [
+    isIncomeChecked,
+    isOutcomeChecked,
+    typeFilter,
+    dateFilter,
+    afterDateFilter,
+    beforeDateFilter,
+    finalFilter,
+  ]);
+
+  useEffect(() => {
     // Fetch the JSON file from the public folder
-    fetch(`http://localhost:5000/Transactions`)
+    fetch(`http://localhost:5000/filteredTransactions?${finalFilter}`)
       .then((response) => {
+        console.log("just fetched and final filter value is" + finalFilter);
         if (!response.ok) {
           throw new Error("Failed to fetch data.json");
         }
@@ -30,7 +89,7 @@ function page() {
       })
       .then((data) => setTransactions(data))
       .catch((error) => console.error("Error:", error));
-  }, []);
+  }, [typeFilter, dateFilter, finalFilter]);
 
   const monthNamess = [
     "Janvier",
@@ -165,17 +224,45 @@ function page() {
               <p className="mx-auto underline text-[#3ec3d5]">by date</p>
               <div className="flex flex-col gap-1">
                 {" "}
-                <p>single date :</p>
-                <p>OR</p>
-                <p>from:</p> <p>to :</p>
+                <p>
+                  from:{" "}
+                  <input
+                    type="date"
+                    value={selectedAfterDate}
+                    onChange={() => handleAfterDateChange()}
+                  />
+                </p>{" "}
+                <p>
+                  to :{" "}
+                  <input
+                    type="date"
+                    value={selectedBeforeDate}
+                    onChange={() => handleBeforeDateChange()}
+                  />{" "}
+                </p>
                 <p>none</p>{" "}
               </div>
             </div>
             <div className="text-zinc-500">
               <p className="mx-auto underline text-[#3ec3d5]">by statuts</p>
               <div className="flex flex-col gap-1">
-                <p>Incomes </p>
-                <p>Outcomes</p>
+                <p>
+                  Incomes{" "}
+                  <input
+                    type="checkbox"
+                    checked={isIncomeChecked}
+                    onChange={ChangeIncomeCheck}
+                  />{" "}
+                </p>
+
+                <p>
+                  Outcomes{" "}
+                  <input
+                    type="checkbox"
+                    checked={isOutcomeChecked}
+                    onChange={ChangeOutcomeCheck}
+                  />{" "}
+                </p>
               </div>
             </div>
             <div className="text-zinc-500  ">
