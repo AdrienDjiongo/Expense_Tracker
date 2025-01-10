@@ -1,8 +1,11 @@
+"use client";
 import Image from "next/image";
 import { ChevronsUp, ChevronsDown, CirclePlus } from "lucide-react";
 import Link from "next/link";
 
 import { Montserrat } from "next/font/google";
+import React from "react";
+import { useState, useEffect } from "react";
 
 const montserrat = Montserrat({
   subsets: ["latin"], // Include the required subsets
@@ -11,6 +14,49 @@ const montserrat = Montserrat({
 });
 
 export default function Home() {
+  const [balance, setBalance] = useState("loading...");
+  const [amounts, setAmounts] = useState(["loading...", "loading..."]);
+  const [transactions, setTransactions] = useState([]);
+
+  useEffect(() => {
+    // Fetch the JSON file from the public folder
+    fetch(`http://localhost:5000/Transactions`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch data.json");
+        }
+        return response.json();
+      })
+      .then((data) => setTransactions(data))
+      .catch((error) => console.error("Error:", error));
+  }, []);
+
+  useEffect(() => {
+    // Fetch the JSON file from the public folder
+    fetch(`http://localhost:5000/Balance`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch data.json");
+        }
+        return response.json();
+      })
+      .then((data) => setBalance(data))
+      .catch((error) => console.error("Error:", error));
+  }, []);
+
+  useEffect(() => {
+    // Fetch the JSON file from the public folder
+    fetch(`http://localhost:5000/InOut`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch data.json");
+        }
+        return response.json();
+      })
+      .then((data) => setAmounts(data))
+      .catch((error) => console.error("Error:", error));
+  }, []);
+
   return (
     <div className={`grid grid-cols-7 ${montserrat.className} `}>
       <div className="col-span-1  shadow-2xl   ">
@@ -22,7 +68,7 @@ export default function Home() {
             </p>{" "}
           </Link>
 
-          <Link href="/" className=" hover:cursor-pointer ">
+          <Link href="/Dashboard" className=" hover:cursor-pointer ">
             {" "}
             <p className="px-4 py-2 text-lg hover:bg-[#3ec3d5] rounded-lg ">
               Dashboard
@@ -48,15 +94,15 @@ export default function Home() {
         <div className="mt-20 mx-[20%] flex justify-between ">
           <div className="bg-[#41dc65] text-white border-2 border- rounded-lg px-3 py-5 w-fit h-fit font-bold shadow-md ">
             <p>Incomes this month</p>
-            <p className=""> +34000 xaf </p>
+            <p className=""> + {amounts[0]} xaf </p>
           </div>
           <div className="rounded-lg px-3 text-2xl py-6 bg-[#ffffffcc] w-fit -mt-10 h-fit font-bold shadow-md ">
             <p>Current balance</p>
-            <p className=" text-[#3ec3d5] text-center "> 50200 xaf </p>
+            <p className=" text-[#3ec3d5] text-center "> {balance} xaf </p>
           </div>
           <div className="bg-[#ff5460] text-white  rounded-lg px-3 py-5 w-fit h-fit font-bold shadow-md ">
             <p>outcomes this month</p>
-            <p className=" "> -12000 xaf </p>
+            <p className=" "> - {amounts[1]}xaf </p>
           </div>
         </div>
 
@@ -78,43 +124,37 @@ export default function Home() {
               />
             </Link>{" "}
           </div>
-
-          <div className="bg-white px-6 py-3 shadow-md rounded-md flex justify-between  ">
-            {" "}
-            <p>moto pour école</p>
-            <div className="flex gap-2">
-              {" "}
-              <p className="text-[#62ff8ee7] font-semibold "> +1500 xaf </p>
-              <ChevronsUp color="#62ff8ee7" />
+          {transactions.slice(0, 4).map((transaction) => (
+            <div
+              key={`transaction-${transaction._id}`}
+              className="flex my-1 flex-col gap-1"
+            >
+              <div className="bg-white px-6 py-2 shadow-md rounded-md flex justify-between ">
+                <p>{transaction.description}</p>
+                <div className="flex gap-2">
+                  <p
+                    className={`${
+                      transaction.type == "outcome"
+                        ? "text-[#ff5460]"
+                        : "text-[#41dc65]"
+                    } font-semibold`}
+                  >
+                    {transaction.type == "income" ? (
+                      <span>+</span>
+                    ) : (
+                      <span>-</span>
+                    )}
+                    {transaction.price} xaf
+                  </p>
+                  {transaction.type == "outcome" ? (
+                    <ChevronsDown color="#ff5460" />
+                  ) : (
+                    <ChevronsUp color="#62ff8ee7" />
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="bg-white px-6 py-3 shadow-md rounded-md flex justify-between  ">
-            {" "}
-            <p>moto pour école</p>
-            <div className="flex gap-2">
-              {" "}
-              <p className="text-[#ff5460] font-semibold "> -2400 xaf </p>
-              <ChevronsDown color="#ff5460" />
-            </div>{" "}
-          </div>
-          <div className="bg-white px-6 py-3 shadow-md rounded-md flex justify-between ">
-            {" "}
-            <p>moto pour école</p>
-            <div className="flex gap-2">
-              {" "}
-              <p className="text-[#62ff8ee7] font-semibold "> +2500 xaf </p>
-              <ChevronsUp color="#62ff8ee7" />
-            </div>{" "}
-          </div>
-          <div className="bg-white px-6 py-3 shadow-md rounded-md flex justify-between  ">
-            {" "}
-            <p>moto pour école</p>
-            <div className="flex gap-2">
-              {" "}
-              <p className="text-[#ff5460] font-semibold "> -2400 xaf </p>
-              <ChevronsDown color="#ff5460" />
-            </div>{" "}
-          </div>
+          ))}
         </div>
 
         <Link href="/Transactions ">

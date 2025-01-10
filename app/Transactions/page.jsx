@@ -1,7 +1,13 @@
 "use client";
 import React from "react";
 import { useEffect, useState } from "react";
-import { ChevronsUp, ChevronsDown, CirclePlus, Filter } from "lucide-react";
+import {
+  ChevronsUp,
+  ChevronsDown,
+  CirclePlus,
+  Filter,
+  CircleDollarSign,
+} from "lucide-react";
 import { Montserrat } from "next/font/google";
 import Link from "next/link";
 
@@ -24,11 +30,8 @@ function page() {
   const [afterDateFilter, setAfterDateFilter] = useState("");
   const [beforeDateFilter, setBeforeDateFilter] = useState("");
   const [finalFilter, setfinalFilter] = useState("");
-  const [selectedValue, setSelectedValue] = useState("");
-
-  const handleChange = (event) => {
-    setSelectedValue(event.target.value);
-  };
+  const [balance, setBalance] = useState("loading...");
+  const [amounts, setAmounts] = useState(["loading...", "loading..."]);
 
   // Handle date input change
   const handleAfterDateChange = (event) => {
@@ -55,12 +58,17 @@ function page() {
     "type=income&minPrice=200&maxPrice=100000&afterDate=2024/12/30";
 
   useEffect(() => {
-    if (selectedValue) {
-      setTypeFilter("type=" + selectedValue);
-    } else {
-      setTypeFilter("");
+    if (isIncomeChecked == isOutcomeChecked) {
+      setTypeFilter(null);
+    } else if (isIncomeChecked && !isOutcomeChecked) {
+      setTypeFilter("type=income");
+    } else if (!isIncomeChecked && isOutcomeChecked) {
+      setTypeFilter("type=outcome");
+    } else if (isOutcomeChecked && !isIncomeChecked) {
+      setTypeFilter("type=outcome");
+    } else if (!isOutcomeChecked && isIncomeChecked) {
+      setTypeFilter("type=income");
     }
-
     setDateFilter(afterDateFilter + "&" + beforeDateFilter);
 
     const DF = dateFilter ? dateFilter + "&" : " ";
@@ -68,7 +76,8 @@ function page() {
 
     setfinalFilter(DF + TF);
   }, [
-    selectedValue,
+    isIncomeChecked,
+    isOutcomeChecked,
     typeFilter,
     dateFilter,
     afterDateFilter,
@@ -76,6 +85,7 @@ function page() {
   ]);
 
   useEffect(() => {
+    setTransactions([]);
     // Fetch the JSON file from the public folder
     fetch(`http://localhost:5000/filteredTransactions?${finalFilter}`)
       .then((response) => {
@@ -88,6 +98,32 @@ function page() {
       .then((data) => setTransactions(data))
       .catch((error) => console.error("Error:", error));
   }, [finalFilter]);
+
+  useEffect(() => {
+    // Fetch the JSON file from the public folder
+    fetch(`http://localhost:5000/Balance`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch data.json");
+        }
+        return response.json();
+      })
+      .then((data) => setBalance(data))
+      .catch((error) => console.error("Error:", error));
+  }, []);
+
+  useEffect(() => {
+    // Fetch the JSON file from the public folder
+    fetch(`http://localhost:5000/InOut`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch data.json");
+        }
+        return response.json();
+      })
+      .then((data) => setAmounts(data))
+      .catch((error) => console.error("Error:", error));
+  }, []);
 
   const monthNamess = [
     "Janvier",
@@ -161,7 +197,7 @@ function page() {
             </p>{" "}
           </Link>
 
-          <Link href="/" className=" hover:cursor-pointer ">
+          <Link href="/Dashboard" className=" hover:cursor-pointer ">
             {" "}
             <p className="px-4 py-2 text-lg hover:bg-[#3ec3d5] rounded-lg ">
               Dashboard
@@ -187,18 +223,18 @@ function page() {
         <div className="flex justify-between px-6 py-4">
           <div className="rounded-lg px-2 py-4 text-center bg-[#ffffffcc] w-fit h-fit font-bold shadow-md ">
             <p>Current balance</p>
-            <p className=" text-[#3ec3d5] "> 50200 xaf </p>
+            <p className=" text-[#3ec3d5] "> {balance} xaf </p>
           </div>
           <div className="rounded-lg px-2 text-center bg-[#ffffffcc] w-fit h-fit font-bold shadow-md ">
             <p>this month</p>
             <div className="text-[#41dc65] flex text-sm  rounded-lg px-2 pt-1 w-fit h-fit font-semibold ">
               <ChevronsUp />
-              <p className=""> 34000 xaf </p>
+              <p className=""> {amounts[0]} xaf </p>
             </div>
 
             <div className="text-[#ff5460] flex text-sm  rounded-lg px-2 pb-1 w-fit h-fit font-semibold ">
               <ChevronsDown />
-              <p className=""> 12000 xaf </p>
+              <p className=""> {amounts[1]} xaf </p>
             </div>
           </div>
         </div>
@@ -244,18 +280,6 @@ function page() {
             <div className="text-zinc-500">
               <p className="mx-auto underline text-[#3ec3d5]">by statuts</p>
               <div className="flex flex-col gap-1">
-                <p>Select en option</p>
-                <select
-                  id="options"
-                  value={selectedValue}
-                  onChange={handleChange}
-                  className="text-zinc-700 bg-white border-[1px] rounded-md active:border-zinc-600 border-zinc-600"
-                >
-                  <option value="">All</option>
-                  <option value="income">Incomes</option>
-                  <option value="outcome">Outcomes</option>
-                </select>
-                <p>Selected: {typeFilter}</p>
                 <p>
                   Incomes{" "}
                   <input
@@ -364,7 +388,16 @@ function page() {
                 ))}
               </div>
             ) : (
-              <p>Chargement des données...</p>
+              <div>
+                <p>Chargement des données...</p>
+                <div className="flex gap-5 animate-pulse text-[#8f8f8f] ">
+                  {" "}
+                  <CircleDollarSign size={50} strokeWidth={1} />
+                  <CircleDollarSign size={50} strokeWidth={1} />
+                  <CircleDollarSign size={50} strokeWidth={1} />
+                  <CircleDollarSign size={50} strokeWidth={1} />{" "}
+                </div>{" "}
+              </div>
             )}
           </div>
         </div>
